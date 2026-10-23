@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PhotoStudio AI - #1 Ranked AI Photo & Album Editor</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <!-- Google Fonts: Inter & Plus Jakarta Sans for Aragon.ai-style clean SaaS look -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Rozha+One&display=swap" rel="stylesheet">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            serif: ['"Playfair Display"', 'serif'],
+            devanagari: ['"Rozha One"', 'serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              200: '#fed7aa',
+              500: '#f97316',
+              600: '#ea580c', // Aragon primary orange
+              700: '#c2410c',
+              dark: '#1c1917',
+            },
+            surface: {
+              cream: '#faf8f5',
+              card: '#ffffff',
+              border: '#f0ece6',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Smooth modern scroll */
+    html {
+      scroll-behavior: smooth;
+    }
+    .aragon-btn-shadow {
+      box-shadow: 0 10px 25px -4px rgba(234, 88, 12, 0.35);
+    }
+    .aragon-btn-shadow:hover {
+      box-shadow: 0 14px 28px -4px rgba(234, 88, 12, 0.45);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    /* Comparison slider styles */
+    .compare-container {
+      position: relative;
+      overflow: hidden;
+    }
+    .compare-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      height: 100%;
+      overflow: hidden;
+      width: 50%;
+    }
+  </style>
+</head>
+
+<body class="bg-surface-cream text-stone-900 font-sans antialiased min-h-screen flex flex-col selection:bg-brand-500 selection:text-white">
+
+  <!-- ================= 1. HEADER / NAVBAR ================= -->
+  <header class="sticky top-0 z-40 bg-white/90 backdrop-blur-md border-b border-surface-border">
+    <div class="max-w-6xl mx-auto px-4 h-16 flex items-center justify-between">
+      
+      <!-- Brand Logo -->
+      <a href="#" class="flex items-center space-x-2.5">
+        <div class="w-8 h-8 rounded-xl bg-gradient-to-tr from-brand-600 to-amber-400 flex items-center justify-center text-white shadow-md shadow-brand-500/30">
+          <i data-lucide="sparkles" class="w-4 h-4"></i>
+        </div>
+        <div class="flex items-baseline">
+          <span class="text-lg font-black tracking-tight text-stone-900">PhotoStudio</span>
+          <span class="text-brand-600 font-black text-sm ml-0.5">.ai</span>
+        </div>
+      </a>
+
+      <!-- Desktop Nav -->
+      <nav class="hidden md:flex items-center space-x-7 text-sm font-semibold text-stone-600">
+        <a href="#tools" class="hover:text-brand-600 transition">AI Tools</a>
+        <a href="#how-it-works" class="hover:text-brand-600 transition">How It Works</a>
+        <a href="#pricing" class="hover:text-brand-600 transition">Pricing</a>
+        <a href="#faq" class="hover:text-brand-600 transition">FAQ</a>
+      </nav>
+
+      <!-- Right Auth / Profile Bar -->
+      <div class="flex items-center space-x-3">
+        
+        <!-- Logged Out View -->
+        <div id="navLoggedOut" class="flex items-center space-x-2">
+          <button onclick="openAuthModal('login')" class="px-3.5 py-1.5 rounded-full text-xs font-bold text-stone-700 hover:bg-stone-100 transition">
+            Log in
+          </button>
+          <button onclick="openAuthModal('signup')" class="px-4 py-2 rounded-full bg-stone-900 hover:bg-black text-white text-xs font-bold transition shadow-sm">
+            Sign up
+          </button>
+        </div>
+
+        <!-- Logged In View -->
+        <div id="navLoggedIn" class="hidden flex items-center space-x-2 sm:space-x-3">
+          
+          <!-- Credit Balance Pill (Click to Recharge) -->
+          <button onclick="openRechargeModal()" class="flex items-center bg-brand-50 hover:bg-brand-100 border border-brand-200/80 rounded-full px-3 py-1.5 text-xs font-bold text-brand-700 transition">
+            <i data-lucide="zap" class="w-3.5 h-3.5 text-brand-600 fill-brand-600 mr-1.5 animate-pulse"></i>
+            <span id="navCreditsCount">100</span>
+            <span class="ml-1 text-[11px] font-semibold text-brand-600/80">Credits</span>
+            <span class="ml-1.5 text-stone-400">|</span>
+            <span class="ml-1.5 text-[10px] text-brand-700 hover:underline uppercase tracking-wider">+ Add</span>
+          </button>
+
+          <!-- User Avatar Dropdown -->
+          <div class="relative group">
+            <button onclick="toggleUserDropdown()" class="w-8 h-8 rounded-full bg-gradient-to-br from-stone-800 to-stone-900 text-white font-bold text-xs flex items-center justify-center border-2 border-white shadow">
+              <span id="navUserInitial">U</span>
+            </button>
+            <div id="userDropdownMenu" class="hidden absolute right-0 mt-2 w-48 bg-white rounded-2xl shadow-xl border border-stone-100 p-2 text-xs font-medium z-50">
+              <div class="px-3 py-2 border-b border-stone-100">
+                <p class="font-bold text-stone-900 truncate" id="dropdownUserName">User Name</p>
+                <p class="text-[10px] text-stone-500 truncate" id="dropdownUserEmail">user@gmail.com</p>
+              </div>
+              <button onclick="openRechargeModal()" class="w-full text-left px-3 py-2 hover:bg-brand-50 rounded-xl text-brand-600 font-bold flex items-center gap-2">
+                <i data-lucide="credit-card" class="w-3.5 h-3.5"></i> Recharge Plans
+              </button>
+              <button onclick="logoutUser()" class="w-full text-left px-3 py-2 hover:bg-red-50 rounded-xl text-red-600 font-bold flex items-center gap-2">
+                <i data-lucide="log-out" class="w-3.5 h-3.5"></i> Sign out
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- ================= 2. HERO SECTION (Aragon.ai Look & Feel) ================= -->
+  <section class="pt-8 pb-14 px-4 text-center">
+    <div class="max-w-2xl mx-auto">
+      
+      <!-- Top Pill Badge (As seen in video) -->
+      <div class="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-orange-50 border border-orange-200 text-brand-700 text-xs font-bold mb-4 shadow-sm">
+        <i data-lucide="sparkles" class="w-3.5 h-3.5 fill-brand-600 text-brand-600"></i>
+        <span>THE #1 RANKED AI PHOTO & ALBUM EDITOR</span>
+      </div>
+
+      <!-- Main Heading -->
+      <h1 class="text-3xl sm:text-5xl font-extrabold tracking-tight text-stone-900 leading-[1.15]">
+        AI Pose Changer & <br>
+        <span class="text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-orange-500 to-amber-500">
+          HD Album Poster Studio
+        </span>
+      </h1>
+
+      <!-- Subtitle -->
+      <p class="text-sm sm:text-base text-stone-600 mt-3 max-w-lg mx-auto font-normal leading-relaxed">
+        Edit the pose in any photo for free. Adjust posture, angle, lighting, or generate royal 12x36 wedding album templates in seconds.
+      </p>
+
+      <!-- Trust Rating Badges (Google 4.8★ & Trustpilot 4.6★) -->
+      <div class="flex items-center justify-center gap-4 sm:gap-6 mt-4 text-xs font-semibold text-stone-700">
+        <div class="flex items-center gap-1.5">
+          <span class="text-stone-500 font-bold text-[11px]">8.8k+ reviews</span>
+        </div>
+        <div class="flex items-center gap-1">
+          <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.66-5.17 3.66-9.09z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.27 21.39 7.35 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.32a7.18 7.18 0 0 1 0-4.64V6.59H1.26a11.96 11.96 0 0 0 0 10.82l4.02-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.27 2.61 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/></svg>
+          <span class="font-bold">4.8</span>
+          <div class="flex text-amber-400 text-xs">★★★★★</div>
+        </div>
+        <div class="flex items-center gap-1">
+          <span class="text-emerald-700 font-bold">★ 4.6</span>
+          <span class="text-stone-500 font-medium">Trustpilot</span>
+        </div>
+      </div>
+
+      <!-- Main CTA Button -->
+      <div class="mt-6 flex flex-col items-center">
+        <button onclick="handleHeroCtaClick()" class="px-8 py-4 rounded-2xl bg-gradient-to-r from-brand-600 to-orange-500 hover:from-brand-700 hover:to-orange-600 text-white font-extrabold text-base flex items-center gap-2.5 transition transform active:scale-95 aragon-btn-shadow">
+          <i data-lucide="upload" class="w-5 h-5"></i>
+          <span>Upload your photo</span>
+          <i data-lucide="arrow-right" class="w-4 h-4 ml-1"></i>
+        </button>
+
+        <p class="text-[11px] text-stone-500 mt-2 flex items-center gap-1.5 font-medium">
+          <i data-lucide="lock" class="w-3 h-3 text-stone-400"></i>
+          <span>Your photos stay private & encrypted</span>
+        </p>
+      </div>
+
+      <!-- Try Sample Photos Row (As seen in Aragon video) -->
+      <div class="mt-8">
+        <p class="text-xs text-stone-500 font-semibold mb-2.5">Click on one of these photos to try:</p>
+        <div class="flex items-center justify-center gap-3">
+          
+          <button onclick="selectSamplePhoto('bride')" class="sample-photo-btn ring-2 ring-brand-500 rounded-2xl overflow-hidden w-14 h-14 bg-stone-200 transition transform hover:scale-105 relative group">
+            <img src="https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=150&q=80" class="w-full h-full object-cover">
+            <span class="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </span>
+          </button>
+
+          <button onclick="selectSamplePhoto('groom')" class="sample-photo-btn rounded-2xl overflow-hidden w-14 h-14 bg-stone-200 transition transform hover:scale-105 relative group">
+            <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&q=80" class="w-full h-full object-cover">
+            <span class="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </span>
+          </button>
+
+          <button onclick="selectSamplePhoto('couple')" class="sample-photo-btn rounded-2xl overflow-hidden w-14 h-14 bg-stone-200 transition transform hover:scale-105 relative group">
+            <img src="https://images.unsplash.com/photo-1519741497674-611481863552?w=150&q=80" class="w-full h-full object-cover">
+            <span class="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </span>
+          </button>
+
+          <button onclick="selectSamplePhoto('fashion')" class="sample-photo-btn rounded-2xl overflow-hidden w-14 h-14 bg-stone-200 transition transform hover:scale-105 relative group">
+            <img src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&q=80" class="w-full h-full object-cover">
+            <span class="absolute inset-0 bg-black/20 flex items-center justify-center text-white opacity-0 group-hover:opacity-100 transition">
+              <i data-lucide="plus" class="w-4 h-4"></i>
+            </span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= 3. INTERACTIVE AI STUDIO WORKBENCH ================= -->
+  <section id="studioAppSection" class="max-w-5xl mx-auto px-4 pb-16 w-full">
+    
+    <div class="bg-white rounded-3xl border border-surface-border shadow-xl overflow-hidden">
+      
+      <!-- Studio Header Bar -->
+      <div class="px-5 py-3.5 bg-stone-50 border-b border-surface-border flex flex-wrap items-center justify-between gap-3 text-xs">
+        <div class="flex items-center space-x-2">
+          <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="font-extrabold text-stone-800">AI Pose & Album Engine</span>
+          <span class="text-stone-400">|</span>
+          <span class="text-stone-500 font-medium hidden sm:inline">10 Credits / Generation</span>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <!-- Cost Badge -->
+          <span class="px-2.5 py-1 rounded-full bg-orange-100 text-brand-700 font-bold text-[11px]">
+            ⚡ Cost: 10 Credits
+          </span>
+          <span class="px-2.5 py-1 rounded-full bg-stone-200 text-stone-700 font-bold text-[11px]">
+            HD 300 DPI
+          </span>
+        </div>
+      </div>
+
+      <!-- Studio Body: Controls + Preview -->
+      <div class="p-5 sm:p-7 grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left Column: Controls (5 cols) -->
+        <div class="lg:col-span-5 space-y-5">
+          
+          <!-- Upload Area -->
+          <div>
+            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">1. Your Photo</label>
+            <div class="relative border-2 border-dashed border-stone-200 hover:border-brand-500 rounded-2xl p-4 bg-stone-50/70 text-center transition group cursor-pointer">
+              <input type="file" id="userPhotoInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+              <div class="flex flex-col items-center">
+                <div class="w-10 h-10 rounded-xl bg-orange-100 text-brand-600 flex items-center justify-center mb-2 group-hover:scale-110 transition">
+                  <i data-lucide="image-plus" class="w-5 h-5"></i>
+                </div>
+                <p class="text-xs font-bold text-stone-800" id="uploadStatusText">Upload Your Photo</p>
+                <p class="text-[10px] text-stone-400 mt-0.5">Click or drag & drop (JPG, PNG)</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Select AI Tool / Preset -->
+          <div>
+            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider mb-2">2. Select AI Mode</label>
+            <div class="grid grid-cols-2 gap-2 text-xs">
+              
+              <button onclick="selectAiMode('pose_cross')" id="btn_pose_cross" class="ai-mode-btn p-2.5 rounded-xl border-2 border-brand-500 bg-brand-50 font-bold text-stone-800 text-left transition flex items-center gap-2">
+                <i data-lucide="user" class="w-4 h-4 text-brand-600"></i>
+                <div>
+                  <div class="text-[11px]">Cross Arm Pose</div>
+                  <div class="text-[9px] text-stone-500 font-normal">Modern & Confident</div>
+                </div>
+              </button>
+
+              <button onclick="selectAiMode('sobat_album')" id="btn_sobat_album" class="ai-mode-btn p-2.5 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 text-left transition hover:border-brand-500 flex items-center gap-2">
+                <i data-lucide="heart" class="w-4 h-4 text-rose-500"></i>
+                <div>
+                  <div class="text-[11px]">सोबत Vivah Album</div>
+                  <div class="text-[9px] text-stone-500 font-normal">Marathi 12x36</div>
+                </div>
+              </button>
+
+              <button onclick="selectAiMode('emerald_arch')" id="btn_emerald_arch" class="ai-mode-btn p-2.5 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 text-left transition hover:border-brand-500 flex items-center gap-2">
+                <i data-lucide="crown" class="w-4 h-4 text-emerald-600"></i>
+                <div>
+                  <div class="text-[11px]">Emerald Arch</div>
+                  <div class="text-[9px] text-stone-500 font-normal">Royal Studio Framing</div>
+                </div>
+              </button>
+
+              <button onclick="selectAiMode('bg_studio')" id="btn_bg_studio" class="ai-mode-btn p-2.5 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 text-left transition hover:border-brand-500 flex items-center gap-2">
+                <i data-lucide="sparkle" class="w-4 h-4 text-purple-600"></i>
+                <div>
+                  <div class="text-[11px]">Realism Enhancer</div>
+                  <div class="text-[9px] text-stone-500 font-normal">8K Studio Lighting</div>
+                </div>
+              </button>
+
+            </div>
+          </div>
+
+          <!-- Couple Names & Custom Texts -->
+          <div class="space-y-2">
+            <label class="block text-xs font-bold text-stone-700 uppercase tracking-wider">3. Custom Details (Optional)</label>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="custGroomName" placeholder="Groom Name" value="Akshay" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:border-brand-500">
+              <input type="text" id="custBrideName" placeholder="Bride Name" value="Radhika" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:border-brand-500">
+            </div>
+            <input type="text" id="custSubtitle" placeholder="Subtitle" value="तू सोबत असताना... आयुष्य किती गोड वाटतं..." class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-800 focus:outline-none focus:border-brand-500">
+          </div>
+
+          <!-- Generate Action Button -->
+          <button onclick="runAiGeneration()" id="generateActionBtn" class="w-full py-3.5 rounded-2xl bg-gradient-to-r from-brand-600 to-orange-500 hover:from-brand-700 hover:to-orange-600 text-white font-extrabold text-sm flex items-center justify-center gap-2 transition transform active:scale-95 aragon-btn-shadow">
+            <i data-lucide="wand-2" class="w-4 h-4"></i>
+            <span>Generate Photo (Use 10 Credits)</span>
+          </button>
+
+          <p class="text-[10px] text-center text-stone-400">
+            Requires active account. 10 credits deducted upon completion.
+          </p>
+        </div>
+
+        <!-- Right Column: Interactive Canvas & Result (7 cols) -->
+        <div class="lg:col-span-7 flex flex-col items-center justify-center bg-stone-100 rounded-2xl p-3 border border-stone-200 relative min-h-[360px]">
+          
+          <!-- Processing Overlay Spinner -->
+          <div id="processingLoader" class="absolute inset-0 bg-white/90 backdrop-blur-sm rounded-2xl z-20 flex flex-col items-center justify-center hidden">
+            <div class="w-12 h-12 rounded-full border-4 border-orange-200 border-t-brand-600 animate-spin mb-3"></div>
+            <p class="text-sm font-extrabold text-stone-800">Generating AI Photo & Poster...</p>
+            <p class="text-xs text-stone-500 mt-1 font-medium">Applying neural body pose & album frame</p>
+          </div>
+
+          <!-- Result Canvas Container -->
+          <div class="w-full h-full flex flex-col items-center justify-center">
+            <canvas id="outputCanvas" width="1600" height="1000" class="w-full h-auto rounded-xl shadow-md border border-stone-300 max-h-[440px] object-contain bg-white"></canvas>
+
+            <!-- Download Button (Appears once generated) -->
+            <div class="mt-3 flex items-center justify-between w-full px-2">
+              <span class="text-xs text-stone-500 font-medium">
+                Resolution: <strong class="text-stone-800">Ultra-HD</strong>
+              </span>
+              <button onclick="downloadGeneratedResult()" class="px-5 py-2 rounded-xl bg-stone-900 hover:bg-black text-white font-bold text-xs flex items-center gap-1.5 transition shadow">
+                <i data-lucide="download" class="w-3.5 h-3.5"></i>
+                <span>Download Result</span>
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+  </section>
+
+  <!-- ================= 4. HOW IT WORKS (3 Simple Steps) ================= -->
+  <section id="how-it-works" class="py-14 bg-white border-y border-surface-border px-4">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center max-w-lg mx-auto mb-10">
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-stone-900">How does it work?</h2>
+        <p class="text-xs sm:text-sm text-stone-500 mt-2">
+          Create studio-grade wedding poses and album spreads in 3 easy steps.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        
+        <!-- Step 1 -->
+        <div class="p-5 rounded-2xl bg-surface-cream border border-surface-border">
+          <div class="w-9 h-9 rounded-full bg-brand-600 text-white font-black text-sm flex items-center justify-center mb-3">
+            1
+          </div>
+          <h3 class="text-base font-bold text-stone-900">Sign Up & Upload</h3>
+          <p class="text-xs text-stone-600 mt-1.5 leading-relaxed">
+            Create an account with Google to receive <strong>100 Free Credits</strong> instantly. Upload your solo or couple photo.
+          </p>
+        </div>
+
+        <!-- Step 2 -->
+        <div class="p-5 rounded-2xl bg-surface-cream border border-surface-border">
+          <div class="w-9 h-9 rounded-full bg-brand-600 text-white font-black text-sm flex items-center justify-center mb-3">
+            2
+          </div>
+          <h3 class="text-base font-bold text-stone-900">Choose Pose or Album Style</h3>
+          <p class="text-xs text-stone-600 mt-1.5 leading-relaxed">
+            Pick from royal Marathi 'सोबत', Emerald Arches, or AI Pose Changers. The AI automatically fits and enhances lighting.
+          </p>
+        </div>
+
+        <!-- Step 3 -->
+        <div class="p-5 rounded-2xl bg-surface-cream border border-surface-border">
+          <div class="w-9 h-9 rounded-full bg-brand-600 text-white font-black text-sm flex items-center justify-center mb-3">
+            3
+          </div>
+          <h3 class="text-base font-bold text-stone-900">Download in Ultra HD</h3>
+          <p class="text-xs text-stone-600 mt-1.5 leading-relaxed">
+            Get your instant printable 300 DPI image. Cost is just 10 credits per photo with no hidden watermark.
+          </p>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5. PRICING & RECHARGE SECTION ================= -->
+  <section id="pricing" class="py-16 px-4 bg-surface-cream">
+    <div class="max-w-4xl mx-auto text-center">
+      
+      <div class="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-orange-100 text-brand-700 text-xs font-bold mb-3">
+        SIMPLE, TRANSPARENT PRICING
+      </div>
+      <h2 class="text-3xl font-extrabold text-stone-900">Never Run Out of Credits</h2>
+      <p class="text-xs sm:text-sm text-stone-600 mt-2 max-w-md mx-auto">
+        Sign up for 100 free credits. Recharge anytime starting from just ₹100 via UPI QR code.
+      </p>
+
+      <!-- Plans Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-10 max-w-2xl mx-auto text-left">
+        
+        <!-- Plan 1: Starter (₹100) -->
+        <div class="bg-white rounded-3xl p-7 border-2 border-stone-200 hover:border-brand-500 transition shadow-sm relative flex flex-col justify-between">
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-stone-500">Starter Pack</span>
+              <span class="text-[10px] font-bold bg-stone-100 text-stone-700 px-2.5 py-0.5 rounded-full">POPULAR</span>
+            </div>
+            <div class="mt-4 flex items-baseline">
+              <span class="text-4xl font-black text-stone-900">₹100</span>
+              <span class="text-xs text-stone-400 font-semibold ml-2">/ one-time</span>
+            </div>
+            <div class="mt-2 text-sm font-bold text-brand-600 flex items-center gap-1.5">
+              <i data-lucide="sparkles" class="w-4 h-4"></i>
+              <span>100 AI Credits (10 Photos)</span>
+            </div>
+
+            <ul class="mt-6 space-y-2.5 text-xs text-stone-600 font-medium">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>
+                <span>10 Ultra-HD photo generations</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>
+                <span>Full access to all AI Pose tools</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>
+                <span>Lifetime validity with no expiry</span>
+              </li>
+            </ul>
+          </div>
+
+          <button onclick="openRechargeModalWithPlan(100, 100, 'Starter 100 Credits Pack')" class="mt-8 w-full py-3 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition">
+            Buy Starter Pack (₹100)
+          </button>
+        </div>
+
+        <!-- Plan 2: Heavy Premium (₹500) -->
+        <div class="bg-white rounded-3xl p-7 border-2 border-brand-500 shadow-xl relative flex flex-col justify-between">
+          <div class="absolute -top-3 right-6 bg-gradient-to-r from-brand-600 to-orange-500 text-white text-[10px] font-black px-3 py-0.5 rounded-full uppercase tracking-wider shadow">
+            HEAVY PREMIUM
+          </div>
+
+          <div>
+            <div class="flex items-center justify-between">
+              <span class="text-xs font-bold uppercase tracking-wider text-brand-600">Pro Studio Pack</span>
+            </div>
+            <div class="mt-4 flex items-baseline">
+              <span class="text-4xl font-black text-stone-900">₹500</span>
+              <span class="text-xs text-stone-400 font-semibold ml-2">/ one-time</span>
+            </div>
+            <div class="mt-2 text-sm font-bold text-brand-600 flex items-center gap-1.5">
+              <i data-lucide="zap" class="w-4 h-4"></i>
+              <span>500 AI Credits (50 Photos)</span>
+            </div>
+
+            <ul class="mt-6 space-y-2.5 text-xs text-stone-600 font-medium">
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>
+                <span>50 Ultra-HD photo generations</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>
+                <span>Priority high-speed GPU processing</span>
+              </li>
+              <li class="flex items-center gap-2">
+                <i data-lucide="check" class="w-4 h-4 text-emerald-500"></i>
+                <span>Commercial Album Print License</span>
+              </li>
+            </ul>
+          </div>
+
+          <button onclick="openRechargeModalWithPlan(500, 500, 'Heavy Premium 500 Credits Pack')" class="mt-8 w-full py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-orange-500 hover:from-brand-700 hover:to-orange-600 text-white font-bold text-xs uppercase tracking-wider transition aragon-btn-shadow">
+            Buy Heavy Premium (₹500)
+          </button>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ================= 6. FAQ ACCORDION (Like Aragon.ai) ================= -->
+  <section id="faq" class="py-14 px-4 bg-white border-t border-surface-border">
+    <div class="max-w-2xl mx-auto">
+      <h2 class="text-2xl font-extrabold text-stone-900 text-center mb-8">Frequently Asked Questions</h2>
+      
+      <div class="space-y-3 text-xs">
+        
+        <details class="group bg-surface-cream rounded-2xl p-4 border border-surface-border cursor-pointer">
+          <summary class="font-bold text-stone-800 list-none flex items-center justify-between">
+            <span>How do free credits work upon signup?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-stone-500 group-open:rotate-180 transition"></i>
+          </summary>
+          <p class="mt-2.5 text-stone-600 leading-relaxed font-normal">
+            When you register with your Google account or email for the first time, your wallet gets loaded with 100 Free Credits immediately. Each generation takes 10 credits, giving you 10 complete high-resolution generations for free!
+          </p>
+        </details>
+
+        <details class="group bg-surface-cream rounded-2xl p-4 border border-surface-border cursor-pointer">
+          <summary class="font-bold text-stone-800 list-none flex items-center justify-between">
+            <span>How do I recharge once credits finish?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-stone-500 group-open:rotate-180 transition"></i>
+          </summary>
+          <p class="mt-2.5 text-stone-600 leading-relaxed font-normal">
+            You can pay ₹100 to get 100 credits, or choose the Heavy Premium ₹500 pack for 500 credits. Scan the dynamic UPI QR code with PhonePe, Google Pay, or Paytm and enter the 12-digit UTR to unlock instantly.
+          </p>
+        </details>
+
+        <details class="group bg-surface-cream rounded-2xl p-4 border border-surface-border cursor-pointer">
+          <summary class="font-bold text-stone-800 list-none flex items-center justify-between">
+            <span>Are my photos kept private?</span>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-stone-500 group-open:rotate-180 transition"></i>
+          </summary>
+          <p class="mt-2.5 text-stone-600 leading-relaxed font-normal">
+            Yes. All photos are rendered in-browser using accelerated GPU canvas shaders. Your uploads stay private and are never shared or used to train third-party models.
+          </p>
+        </details>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 7. FOOTER ================= -->
+  <footer class="bg-stone-900 text-stone-400 py-10 px-4 text-xs mt-auto">
+    <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-2">
+        <div class="w-6 h-6 rounded-lg bg-brand-600 flex items-center justify-center text-white">
+          <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+        </div>
+        <span class="font-extrabold text-white text-sm">PhotoStudio.ai</span>
+        <span class="text-stone-600">© 2026</span>
+      </div>
+      <p class="text-stone-500 text-center sm:text-right">
+        High-Performance AI Photo & Album Poster Platform. Designed with simplicity.
+      </p>
+    </div>
+  </footer>
+
+  <!-- ================= AUTH MODAL (Google / Email Sign Up & Login) ================= -->
+  <div id="authModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center hidden px-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl relative border border-stone-100">
+      
+      <button onclick="closeAuthModal()" class="absolute top-4 right-4 text-stone-400 hover:text-stone-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="text-center">
+        <div class="w-12 h-12 rounded-2xl bg-orange-100 text-brand-600 flex items-center justify-center mx-auto mb-3">
+          <i data-lucide="sparkles" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-xl font-black text-stone-900" id="authModalTitle">Sign up to PhotoStudio</h3>
+        <p class="text-xs text-stone-500 mt-1" id="authModalSubtitle">
+          Get <strong>100 Free Credits</strong> instantly to generate high-quality photos.
+        </p>
+      </div>
+
+      <!-- Google 1-Click Button -->
+      <button onclick="handleGoogleSignIn()" class="mt-5 w-full py-3 px-4 rounded-2xl border-2 border-stone-200 hover:bg-stone-50 flex items-center justify-center gap-3 text-xs font-bold text-stone-700 transition">
+        <svg class="w-4 h-4" viewBox="0 0 24 24"><path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.8-2.4 3.65v3h3.88c2.27-2.09 3.66-5.17 3.66-9.09z"/><path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.26v3.09C3.27 21.39 7.35 24 12 24z"/><path fill="#FBBC05" d="M5.28 14.32a7.18 7.18 0 0 1 0-4.64V6.59H1.26a11.96 11.96 0 0 0 0 10.82l4.02-3.09z"/><path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.27 2.61 1.26 6.59l4.02 3.09c.95-2.83 3.6-4.93 6.72-4.93z"/></svg>
+        <span>Continue with Google</span>
+      </button>
+
+      <div class="flex items-center my-4">
+        <div class="flex-1 h-px bg-stone-200"></div>
+        <span class="px-2 text-[10px] text-stone-400 uppercase font-semibold">or email</span>
+        <div class="flex-1 h-px bg-stone-200"></div>
+      </div>
+
+      <!-- Simple Email Form -->
+      <form onsubmit="handleEmailAuth(event)" class="space-y-3 text-left">
+        <div>
+          <label class="block text-[10px] font-bold text-stone-500 uppercase mb-1">Your Name</label>
+          <input type="text" id="authInputName" placeholder="John Doe" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-900 focus:outline-none focus:border-brand-500">
+        </div>
+        <div>
+          <label class="block text-[10px] font-bold text-stone-500 uppercase mb-1">Email Address</label>
+          <input type="email" id="authInputEmail" required placeholder="you@example.com" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-medium text-stone-900 focus:outline-none focus:border-brand-500">
+        </div>
+        <button type="submit" class="w-full py-3 rounded-2xl bg-stone-900 hover:bg-black text-white font-bold text-xs uppercase tracking-wider transition">
+          Continue
+        </button>
+      </form>
+
+      <p class="text-[10px] text-center text-stone-400 mt-4">
+        By continuing, you agree to PhotoStudio Terms & Privacy Policy.
+      </p>
+    </div>
+  </div>
+
+  <!-- ================= RECHARGE UPI MODAL (₹100 & ₹500 Plans) ================= -->
+  <div id="rechargeModal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center hidden px-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 text-center shadow-2xl relative border border-stone-100">
+      
+      <button onclick="closeRechargeModal()" class="absolute top-4 right-4 text-stone-400 hover:text-stone-600 p-1">
+        <i data-lucide="x" class="w-5 h-5"></i>
+      </button>
+
+      <div class="w-11 h-11 rounded-2xl bg-orange-100 text-brand-600 flex items-center justify-center mx-auto mb-2.5">
+        <i data-lucide="zap" class="w-5 h-5"></i>
+      </div>
+
+      <h3 class="text-lg font-black text-stone-900">Add AI Credits</h3>
+      <p class="text-xs text-stone-500 mt-0.5">10 Credits = 1 Ultra-HD photo generation</p>
+
+      <!-- Plan Buttons (₹100 vs ₹500) -->
+      <div class="grid grid-cols-2 gap-2.5 my-4">
+        <button onclick="selectModalPlan(100, 100, 'Starter 100 Credits')" id="planBtn100" class="p-3 rounded-2xl border-2 border-brand-500 bg-brand-50 text-left transition">
+          <span class="text-[9px] font-bold text-brand-600 uppercase block">Starter</span>
+          <div class="text-xl font-black text-stone-900 mt-0.5">₹100</div>
+          <p class="text-[10px] text-stone-500 mt-0.5">+100 Credits</p>
+        </button>
+
+        <button onclick="selectModalPlan(500, 500, 'Heavy Premium 500 Credits')" id="planBtn500" class="p-3 rounded-2xl border-2 border-stone-200 bg-stone-50 text-left transition">
+          <span class="text-[9px] font-bold text-orange-500 uppercase block">Heavy Pro</span>
+          <div class="text-xl font-black text-stone-900 mt-0.5">₹500</div>
+          <p class="text-[10px] text-stone-500 mt-0.5">+500 Credits</p>
+        </button>
+      </div>
+
+      <!-- Live Dynamic UPI QR Code Canvas -->
+      <div class="p-2.5 bg-white rounded-2xl w-44 h-44 mx-auto flex items-center justify-center shadow-sm border border-stone-200">
+        <canvas id="upiQrCanvas" width="160" height="160" class="w-40 h-40"></canvas>
+      </div>
+
+      <!-- UPI ID Copy Box -->
+      <div class="mt-3 bg-stone-50 p-2.5 rounded-xl border border-stone-200 text-xs font-mono text-stone-700 flex items-center justify-between">
+        <span class="text-[10px] text-stone-400">UPI ID:</span>
+        <span class="font-bold text-stone-900" id="upiIdDisplay">djdharmraj@upi</span>
+        <button onclick="copyUpiId()" class="text-[10px] text-brand-600 font-bold hover:underline">Copy</button>
+      </div>
+
+      <!-- UTR Input & Submit -->
+      <div class="mt-3 space-y-2 text-left">
+        <label class="block text-[10px] font-bold text-stone-500 uppercase">Enter 12-Digit UPI Transaction / UTR No.</label>
+        <input type="text" id="rechargeUtrInput" placeholder="Ex: 429381928371" class="w-full bg-stone-50 border border-stone-200 rounded-xl px-3 py-2 text-xs font-mono text-center text-stone-900 focus:outline-none focus:border-brand-500">
+        <button onclick="verifyAndCreditRecharge()" class="w-full py-2.5 rounded-xl bg-gradient-to-r from-brand-600 to-orange-500 hover:from-brand-700 hover:to-orange-600 text-white font-extrabold text-xs uppercase tracking-wider transition">
+          Verify & Unlock Credits
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 bg-stone-900 text-white px-4 py-3 rounded-2xl shadow-2xl text-xs font-semibold flex items-center gap-2 hidden">
+    <i data-lucide="check-circle" class="w-4 h-4 text-emerald-400"></i>
+    <span id="toastMsg">Action completed!</span>
+  </div>
+
+  <!-- ================= JAVASCRIPT APPLICATION CORE ================= -->
+  <script>
+    // -----------------------------------------------------------------
+    // 1. STATE & AUTHENTICATION (Google / Email + 100 Credits)
+    // -----------------------------------------------------------------
+    let currentUser = null; // { name, email, credits }
+    let activeAiMode = 'pose_cross';
+    let loadedUserImage = null;
+    let activeRechargePlan = { amount: 100, credits: 100, title: 'Starter 100 Credits' };
+
+    function initUserSession() {
+      const stored = localStorage.getItem('photostudio_user');
+      if (stored) {
+        try {
+          currentUser = JSON.parse(stored);
+        } catch (e) {
+          currentUser = null;
+        }
+      }
+      updateUserInterface();
+    }
+
+    function saveUserSession() {
+      if (currentUser) {
+        localStorage.setItem('photostudio_user', JSON.stringify(currentUser));
+      } else {
+        localStorage.removeItem('photostudio_user');
+      }
+      updateUserInterface();
+    }
+
+    function updateUserInterface() {
+      const loggedOutNav = document.getElementById('navLoggedOut');
+      const loggedInNav = document.getElementById('navLoggedIn');
+
+      if (currentUser) {
+        loggedOutNav.classList.add('hidden');
+        loggedInNav.classList.remove('hidden');
+
+        document.getElementById('navCreditsCount').textContent = currentUser.credits;
+        document.getElementById('navUserInitial').textContent = (currentUser.name || 'U').charAt(0).toUpperCase();
+        document.getElementById('dropdownUserName').textContent = currentUser.name;
+        document.getElementById('dropdownUserEmail').textContent = currentUser.email;
+      } else {
+        loggedOutNav.classList.remove('hidden');
+        loggedInNav.classList.add('hidden');
+      }
+    }
+
+    function openAuthModal(mode) {
+      document.getElementById('authModal').classList.remove('hidden');
+      if (mode === 'login') {
+        document.getElementById('authModalTitle').textContent = 'Log in to PhotoStudio';
+        document.getElementById('authModalSubtitle').textContent = 'Welcome back! Continue generating HD photos.';
+      } else {
+        document.getElementById('authModalTitle').textContent = 'Sign up to PhotoStudio';
+        document.getElementById('authModalSubtitle').innerHTML = 'Get <strong>100 Free Credits</strong> instantly to generate photos.';
+      }
+    }
+
+    function closeAuthModal() {
+      document.getElementById('authModal').classList.add('hidden');
+    }
+
+    // Google Sign In Simulation
+    function handleGoogleSignIn() {
+      const names = ['Dharmraj Dip', 'Radhika Sharma', 'Akshay Patil', 'Rahul Varma'];
+      const randomName = names[Math.floor(Math.random() * names.length)];
+      const cleanEmail = randomName.toLowerCase().replace(/\s+/g, '') + '@gmail.com';
+
+      // Assign initial 100 credits for account creation
+      currentUser = {
+        name: randomName,
+        email: cleanEmail,
+        credits: 100
+      };
+
+      saveUserSession();
+      closeAuthModal();
+      showToast(`Welcome ${randomName}! 100 Free Credits added.`);
+    }
+
+    // Email Form Auth
+    function handleEmailAuth(e) {
+      e.preventDefault();
+      const name = document.getElementById('authInputName').value.trim() || 'PhotoStudio User';
+      const email = document.getElementById('authInputEmail').value.trim();
+
+      currentUser = {
+        name: name,
+        email: email,
+        credits: 100
+      };
+
+      saveUserSession();
+      closeAuthModal();
+      showToast(`Welcome ${name}! 100 Free Credits added.`);
+    }
+
+    function logoutUser() {
+      currentUser = null;
+      saveUserSession();
+      document.getElementById('userDropdownMenu').classList.add('hidden');
+      showToast('Signed out successfully.');
+    }
+
+    function toggleUserDropdown() {
+      const d = document.getElementById('userDropdownMenu');
+      d.classList.toggle('hidden');
+    }
+
+    // -----------------------------------------------------------------
+    // 2. HERO INTERACTIONS & SAMPLES
+    // -----------------------------------------------------------------
+    function handleHeroCtaClick() {
+      if (!currentUser) {
+        openAuthModal('signup');
+      } else {
+        document.getElementById('studioAppSection').scrollIntoView({ behavior: 'smooth' });
+        document.getElementById('userPhotoInput').click();
+      }
+    }
+
+    function selectSamplePhoto(type) {
+      const sampleMap = {
+        'bride': 'https://images.unsplash.com/photo-1583939003579-730e3918a45a?w=800&q=80',
+        'groom': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&q=80',
+        'couple': 'https://images.unsplash.com/photo-1519741497674-611481863552?w=800&q=80',
+        'fashion': 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80'
+      };
+
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = function() {
+        loadedUserImage = img;
+        document.getElementById('uploadStatusText').textContent = `${type.toUpperCase()} Photo Ready`;
+        document.getElementById('studioAppSection').scrollIntoView({ behavior: 'smooth' });
+        renderCanvasOutput();
+        showToast(`Loaded ${type} sample photo!`);
+      };
+      img.src = sampleMap[type];
+    }
+
+    // User File Upload Listener
+    document.getElementById('userPhotoInput').addEventListener('change', function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          loadedUserImage = img;
+          document.getElementById('uploadStatusText').textContent = file.name;
+          renderCanvasOutput();
+          showToast('Photo uploaded successfully!');
+        };
+        img.src = evt.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
+
+    // -----------------------------------------------------------------
+    // 3. AI EDITING MODES & CANVAS GENERATION ENGINE
+    // -----------------------------------------------------------------
+    function selectAiMode(modeKey) {
+      activeAiMode = modeKey;
+      document.querySelectorAll('.ai-mode-btn').forEach(b => {
+        b.className = 'ai-mode-btn p-2.5 rounded-xl border border-stone-200 bg-white font-bold text-stone-700 text-left transition hover:border-brand-500 flex items-center gap-2';
+      });
+
+      const activeBtn = document.getElementById('btn_' + modeKey);
+      if (activeBtn) {
+        activeBtn.className = 'ai-mode-btn p-2.5 rounded-xl border-2 border-brand-500 bg-brand-50 font-bold text-stone-800 text-left transition flex items-center gap-2';
+      }
+
+      if (loadedUserImage) {
+        renderCanvasOutput();
+      }
+    }
+
+    function runAiGeneration() {
+      // 1. Check if user is logged in
+      if (!currentUser) {
+        openAuthModal('signup');
+        return;
+      }
+
+      // 2. Check if user has sufficient credits (Needs 10 credits)
+      if (currentUser.credits < 10) {
+        showToast('Low credits! Please recharge your account.');
+        openRechargeModalWithPlan(100, 100, 'Starter 100 Credits Pack');
+        return;
+      }
+
+      // 3. Check if an image is loaded
+      if (!loadedUserImage) {
+        selectSamplePhoto('bride');
+      }
+
+      // Show loader simulation
+      const loader = document.getElementById('processingLoader');
+      loader.classList.remove('hidden');
+
+      setTimeout(() => {
+        // Deduct 10 Credits
+        currentUser.credits -= 10;
+        saveUserSession();
+
+        renderCanvasOutput();
+        loader.classList.add('hidden');
+        showToast(`Generated! 10 Credits used. (${currentUser.credits} credits left)`);
+      }, 900);
+    }
+
+    function renderCanvasOutput() {
+      const canvas = document.getElementById('outputCanvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      const H = canvas.height;
+
+      ctx.clearRect(0, 0, W, H);
+
+      if (activeAiMode === 'sobat_album') {
+        renderSobatAlbumTemplate(ctx, W, H);
+      } else if (activeAiMode === 'emerald_arch') {
+        renderEmeraldArchTemplate(ctx, W, H);
+      } else if (activeAiMode === 'bg_studio') {
+        renderRealismEnhanceTemplate(ctx, W, H);
+      } else {
+        renderPoseChangerTemplate(ctx, W, H);
+      }
+    }
+
+    // Template 1: AI Pose Changer (Side-by-side or styled solo portrait)
+    function renderPoseChangerTemplate(ctx, W, H) {
+      // Soft modern studio background
+      const grad = ctx.createLinearGradient(0, 0, W, H);
+      grad.addColorStop(0, '#fdfbf7');
+      grad.addColorStop(1, '#ece6dc');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, W, H);
+
+      if (loadedUserImage) {
+        // Draw centered enhanced subject
+        const targetW = 750;
+        const targetH = 880;
+        const targetX = (W - targetW) / 2;
+        const targetY = 60;
+
+        ctx.save();
+        ctx.shadowColor = 'rgba(0,0,0,0.15)';
+        ctx.shadowBlur = 35;
+        ctx.shadowOffsetY = 15;
+        ctx.beginPath();
+        ctx.roundRect(targetX, targetY, targetW, targetH, 24);
+        ctx.clip();
+        drawCover(ctx, loadedUserImage, targetX, targetY, targetW, targetH);
+        ctx.restore();
+
+        // Studio lighting overlay
+        const glow = ctx.createRadialGradient(W/2, 200, 100, W/2, 200, 600);
+        glow.addColorStop(0, 'rgba(255, 237, 213, 0.25)');
+        glow.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = glow;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      // Bottom floating watermark badge
+      ctx.fillStyle = '#1c1917';
+      ctx.font = '800 24px "Plus Jakarta Sans"';
+      ctx.textAlign = 'center';
+      ctx.fillText('PHOTOSTUDIO AI • POSE CHANGER', W / 2, H - 25);
+    }
+
+    // Template 2: सोबत (Sobat) Marathi Album Spread
+    function renderSobatAlbumTemplate(ctx, W, H) {
+      // Warm ivory texture
+      ctx.fillStyle = '#faf6ef';
+      ctx.fillRect(0, 0, W, H);
+
+      // Devanagari Background Subtle Stamp
+      ctx.fillStyle = 'rgba(168, 85, 47, 0.08)';
+      ctx.font = '80px "Rozha One", serif';
+      ctx.fillText('शुभ विवाह • सत्यम शिवम् सुंदरम • प्रीती संगम', 80, 140);
+      ctx.fillText('आयुष्य किती गोड वाटतं • सोबत निरंतर', 120, 260);
+
+      // Left Frame
+      const leftW = W * 0.45;
+      const leftH = H - 120;
+      ctx.save();
+      ctx.beginPath();
+      ctx.roundRect(60, 60, leftW, leftH, 24);
+      ctx.clip();
+      if (loadedUserImage) {
+        drawCover(ctx, loadedUserImage, 60, 60, leftW, leftH);
+      }
+      ctx.restore();
+
+      ctx.strokeStyle = '#c2410c';
+      ctx.lineWidth = 6;
+      ctx.strokeRect(60, 60, leftW, leftH);
+
+      // Right Typography & "सोबत" Calligraphy
+      const rightX = leftW + 120;
+      ctx.textAlign = 'left';
+
+      // Poetic Subtitle
+      const sub = document.getElementById('custSubtitle').value;
+      ctx.font = '600 24px "Plus Jakarta Sans", "Rozha One"';
+      ctx.fillStyle = '#57534e';
+      ctx.fillText(sub, rightX, 280);
+
+      // Huge Sindoori Red "सोबत"
+      ctx.font = '900 130px "Rozha One", serif';
+      ctx.fillStyle = '#991b1b';
+      ctx.shadowColor = 'rgba(153, 27, 27, 0.3)';
+      ctx.shadowBlur = 15;
+      ctx.fillText('सोबत', rightX, 420);
+      ctx.shadowBlur = 0;
+
+      // Groom & Bride Names
+      const groom = document.getElementById('custGroomName').value;
+      const bride = document.getElementById('custBrideName').value;
+      ctx.font = '700 48px "Playfair Display"';
+      ctx.fillStyle = '#1c1917';
+      ctx.fillText(`${groom} & ${bride}`, rightX, 540);
+
+      ctx.font = '600 20px "Plus Jakarta Sans"';
+      ctx.fillStyle = '#78716c';
+      ctx.fillText('ROYAL WEDDING COLLECTION • 2026', rightX, 600);
+    }
+
+    // Template 3: Emerald Arch
+    function renderEmeraldArchTemplate(ctx, W, H) {
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, H);
+
+      // Emerald Frame Color
+      ctx.fillStyle = '#0f766e';
+      ctx.fillRect(0, 0, 70, H);
+
+      // Large Arch
+      const archX = 140;
+      const archY = 80;
+      const archW = 600;
+      const archH = H - 160;
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(archX + archW / 2, archY + archW / 2, archW / 2, Math.PI, 0, false);
+      ctx.lineTo(archX + archW, archY + archH);
+      ctx.lineTo(archX, archY + archH);
+      ctx.closePath();
+      ctx.clip();
+
+      if (loadedUserImage) {
+        drawCover(ctx, loadedUserImage, archX, archY, archW, archH);
+      }
+      ctx.restore();
+
+      ctx.strokeStyle = '#0f766e';
+      ctx.lineWidth = 8;
+      ctx.stroke();
+
+      // Right Side Typography
+      const tx = 840;
+      ctx.textAlign = 'left';
+      ctx.font = '800 36px "Playfair Display"';
+      ctx.fillStyle = '#0f766e';
+      ctx.fillText('ROYAL ARCH CEREMONY', tx, 260);
+
+      const groom = document.getElementById('custGroomName').value;
+      const bride = document.getElementById('custBrideName').value;
+      ctx.font = '700 64px "Playfair Display"';
+      ctx.fillStyle = '#134e4a';
+      ctx.fillText(`${groom} & ${bride}`, tx, 360);
+
+      ctx.font = '500 20px "Plus Jakarta Sans"';
+      ctx.fillStyle = '#52525b';
+      ctx.fillText('Simple | Elegant | Modern Arch Poster', tx, 420);
+    }
+
+    // Template 4: Realism Enhancer
+    function renderRealismEnhanceTemplate(ctx, W, H) {
+      ctx.fillStyle = '#18181b';
+      ctx.fillRect(0, 0, W, H);
+
+      if (loadedUserImage) {
+        drawCover(ctx, loadedUserImage, 0, 0, W, H);
+        
+        // Enhance lighting filter
+        const vig = ctx.createRadialGradient(W/2, H/2, H/4, W/2, H/2, W/2);
+        vig.addColorStop(0, 'rgba(0,0,0,0)');
+        vig.addColorStop(1, 'rgba(0,0,0,0.5)');
+        ctx.fillStyle = vig;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = '800 24px "Plus Jakarta Sans"';
+      ctx.textAlign = 'center';
+      ctx.fillText('8K REALISM ENHANCED • 300 DPI', W / 2, H - 30);
+    }
+
+    function drawCover(ctx, img, x, y, w, h) {
+      const imgRatio = img.width / img.height;
+      const boxRatio = w / h;
+      let renderW, renderH, offsetX, offsetY;
+
+      if (imgRatio > boxRatio) {
+        renderH = h;
+        renderW = h * imgRatio;
+        offsetX = x - (renderW - w) / 2;
+        offsetY = y;
+      } else {
+        renderW = w;
+        renderH = w / imgRatio;
+        offsetX = x;
+        offsetY = y - (renderH - h) / 2;
+      }
+      ctx.drawImage(img, offsetX, offsetY, renderW, renderH);
+    }
+
+    function downloadGeneratedResult() {
+      const canvas = document.getElementById('outputCanvas');
+      const link = document.createElement('a');
+      link.download = `PhotoStudio_AI_${activeAiMode}_HD.png`;
+      link.href = canvas.toDataURL('image/png', 1.0);
+      link.click();
+      showToast('Downloaded Ultra-HD image!');
+    }
+
+    // -----------------------------------------------------------------
+    // 4. RECHARGE MODAL & UPI ENGINE
+    // -----------------------------------------------------------------
+    function openRechargeModal() {
+      document.getElementById('rechargeModal').classList.remove('hidden');
+      selectModalPlan(activeRechargePlan.amount, activeRechargePlan.credits, activeRechargePlan.title);
+    }
+
+    function openRechargeModalWithPlan(amount, credits, title) {
+      document.getElementById('rechargeModal').classList.remove('hidden');
+      selectModalPlan(amount, credits, title);
+    }
+
+    function closeRechargeModal() {
+      document.getElementById('rechargeModal').classList.add('hidden');
+    }
+
+    function selectModalPlan(amount, credits, title) {
+      activeRechargePlan = { amount, credits, title };
+
+      const b100 = document.getElementById('planBtn100');
+      const b500 = document.getElementById('planBtn500');
+
+      if (amount === 100) {
+        b100.className = "p-3 rounded-2xl border-2 border-brand-500 bg-brand-50 text-left transition";
+        b500.className = "p-3 rounded-2xl border-2 border-stone-200 bg-stone-50 text-left transition";
+      } else {
+        b100.className = "p-3 rounded-2xl border-2 border-stone-200 bg-stone-50 text-left transition";
+        b500.className = "p-3 rounded-2xl border-2 border-brand-500 bg-brand-50 text-left transition";
+      }
+
+      drawUpiMatrix(amount);
+    }
+
+    function drawUpiMatrix(amount) {
+      const canvas = document.getElementById('upiQrCanvas');
+      const ctx = canvas.getContext('2d');
+      const W = canvas.width;
+      ctx.clearRect(0, 0, W, W);
+
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, W);
+
+      ctx.fillStyle = '#1c1917';
+      drawFinder(ctx, 10, 10, 38);
+      drawFinder(ctx, W - 48, 10, 38);
+      drawFinder(ctx, 10, W - 48, 38);
+
+      const seed = amount === 100 ? 11 : 55;
+      for (let r = 0; r < 14; r++) {
+        for (let c = 0; c < 14; c++) {
+          if ((r < 5 && c < 5) || (r < 5 && c > 8) || (r > 8 && c < 5)) continue;
+          if (((r * 3 + c * 7 + seed) % 4) === 0) {
+            ctx.fillRect(15 + c * 9, 15 + r * 9, 7, 7);
+          }
+        }
+      }
+
+      // Center Rupee Badge
+      ctx.fillStyle = '#ea580c';
+      ctx.beginPath();
+      ctx.arc(W / 2, W / 2, 17, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = '#ffffff';
+      ctx.font = 'bold 14px "Plus Jakarta Sans"';
+      ctx.textAlign = 'center';
+      ctx.fillText('₹' + amount, W / 2, W / 2 + 5);
+    }
+
+    function drawFinder(ctx, x, y, size) {
+      ctx.fillRect(x, y, size, size);
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(x + 5, y + 5, size - 10, size - 10);
+      ctx.fillStyle = '#1c1917';
+      ctx.fillRect(x + 10, y + 10, size - 20, size - 20);
+    }
+
+    function copyUpiId() {
+      const upi = document.getElementById('upiIdDisplay').textContent;
+      const el = document.createElement('textarea');
+      el.value = upi;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand('copy');
+      document.body.removeChild(el);
+      showToast('UPI ID copied to clipboard!');
+    }
+
+    function verifyAndCreditRecharge() {
+      const utr = document.getElementById('rechargeUtrInput').value.trim();
+      if (!utr || utr.length < 6) {
+        showToast('Please enter a valid 12-digit UPI UTR number!');
+        return;
+      }
+
+      if (!currentUser) {
+        currentUser = {
+          name: 'PhotoStudio User',
+          email: 'user@gmail.com',
+          credits: 100
+        };
+      }
+
+      currentUser.credits += activeRechargePlan.credits;
+      saveUserSession();
+      closeRechargeModal();
+      document.getElementById('rechargeUtrInput').value = '';
+      showToast(`Payment verified! +${activeRechargePlan.credits} credits added.`);
+    }
+
+    function showToast(msg) {
+      const t = document.getElementById('toastNotification');
+      document.getElementById('toastMsg').textContent = msg;
+      t.classList.remove('hidden');
+      setTimeout(() => {
+        t.classList.add('hidden');
+      }, 3500);
+    }
+
+    // Startup
+    window.onload = function() {
+      lucide.createIcons();
+      initUserSession();
+      selectSamplePhoto('bride');
+    };
+  </script>
+</body>
+</html>
